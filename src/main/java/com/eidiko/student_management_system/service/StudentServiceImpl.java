@@ -1,5 +1,6 @@
 package com.eidiko.student_management_system.service;
 
+import com.eidiko.student_management_system.dto.RegisterRequest;
 import com.eidiko.student_management_system.dto.StudentDto;
 import com.eidiko.student_management_system.entity.Student;
 import com.eidiko.student_management_system.exception.ResourceNotFoundException;
@@ -7,6 +8,7 @@ import com.eidiko.student_management_system.mapper.StudentMapper;
 import com.eidiko.student_management_system.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,6 +17,9 @@ import java.util.List;
 public class StudentServiceImpl implements StudentService{
   @Autowired
   private StudentRepository studentRepository;
+
+  @Autowired
+  private PasswordEncoder passwordEncoder;
 
     @Override
     public StudentDto createStudent(StudentDto studentDto) {
@@ -25,7 +30,7 @@ public class StudentServiceImpl implements StudentService{
     @Override
     public StudentDto findStudentById(long id) {
     Student student=    studentRepository.findById(id).
-                orElseThrow(()->new ResourceNotFoundException("Student is not Exist with The given "+id));
+                orElseThrow(()->new ResourceNotFoundException("Student is not Exist with The given id "+id));
         return StudentMapper.mapToStudentDto(student);
     }
 
@@ -58,4 +63,17 @@ public class StudentServiceImpl implements StudentService{
       studentRepository.delete(StudentMapper.mapToStudent(studentDto));
         return studentDto;
     }
+
+  public void registerStudent(RegisterRequest request) {
+    Student student = new Student();
+    student.setFirstName(request.getFirstName());
+    student.setLastName(request.getLastName());
+    student.setEmail(request.getEmail());
+    student.setPassword(passwordEncoder.encode(request.getPassword()));
+    studentRepository.save(student);
+  }
+
+  public Student getStudentByEmail(String email) {
+    return studentRepository.findByEmail(email);
+  }
 }
